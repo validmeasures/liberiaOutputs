@@ -1,0 +1,118 @@
+---
+title: Sample Output
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+if(!require(remotes)) install.packages("remotes")
+if(!require(liberia)) install_github("validmeasures/liberia")
+if(!require(liberiaData)) install_github("validmeasures/liberiaData")
+if(!require(gstat)) install.packages("gstat")
+if(!require(rgdal)) install.packages("rgdal")
+if(!require(rgeos)) install.packages("rgeos")
+if(!require(raster)) install.packages("raster")
+if(!require(RColorBrewer)) install.packages("RColorBrewer")
+if(!require(ggplot2)) install.packages("ggplot2")
+
+#
+# Create Mapbox base layer objects for leaflet mapping
+#
+mapbox.satellite <- "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.street    <- "https://api.mapbox.com/styles/v1/mapbox/streets-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.dark      <- "https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.light     <- "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.moonlight <- "https://api.mapbox.com/styles/v1/ernestguevarra/cj3nban30001z2rpahc10c9ef/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.northstar <- "https://api.mapbox.com/styles/v1/ernestguevarra/cj4ke832y4sng2spe2ds4fs55/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.standard  <- "https://api.mapbox.com/styles/v1/ernestguevarra/cj5di36jn0gxg2rphjn3yetpt/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.decimal   <- "https://api.mapbox.com/styles/v1/ernestguevarra/cj5ms1akt3pbi2smtcewsex9m/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+mapbox.terminal  <- "https://api.mapbox.com/styles/v1/ernestguevarra/cj6g0tzbd30kc2sph2wyh666m/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZXJuZXN0Z3VldmFycmEiLCJhIjoiejRRLXlZdyJ9.sqS1zi0rDH5CIzvcn9SXSg"
+
+monrovia <- subset(liberia::districts, admin2Name == "Greater Monrovia")
+lng <- coordinates(monrovia)[ , 1]
+lat <- coordinates(monrovia)[ , 2]
+
+covInt <- interpolate_indicators(indicator = "cmamDF", hexgrid = gmHexGrid, coords = sampleList.r2)
+covHex <- gmHexGrid
+
+covHex@data <- data.frame(covHex@data, covInt[["cmamDF"]])
+```
+
+Urban Montserrado
+================================================================================
+
+Row {data-height=650}
+--------------------------------------------------------------------------------
+
+### Spatial Distribution of SAM case-finding effectiveness
+
+```{r}
+library(leaflet)
+
+pal <- colorNumeric(palette = brewer.pal(n = 5, name = "RdYlGn"),
+                    domain = c(0,1))
+
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = bbox(monrovia)[1, 1], lat1 = bbox(monrovia)[2, 1],
+            lng2 = bbox(monrovia)[1, 2], lat2 = bbox(monrovia)[2, 2]) %>%
+  addPolygons(
+	  data = covHex,
+	  fillColor = pal(covHex$cf),
+	  weight = 1,
+	  opacity = 1,
+	  color = pal(covHex$cf),
+	  dashArray = "",
+	  fillOpacity = 0.7,
+	  highlight = highlightOptions(
+		  weight = 3,
+		  color = "#666",
+		  dashArray = "",
+		  fillOpacity = 0.7,
+		  bringToFront = TRUE),
+	  label = paste(round(covHex$cf * 100, digits = 1), "%", sep = ""),
+	  labelOptions = labelOptions(
+		  style = list("font-weight" = "normal", padding = "3px 8px"),
+		  textsize = "12px",
+		  direction = "auto"
+		)
+	) %>%
+  addLegend(pal = pal, 
+    values = covHex$cf, 
+    opacity = 0.7,
+		position = "bottomleft", 
+		labFormat = labelFormat(suffix = "%", transform = function(x) x * 100),
+		layerId = "legend")
+```
+
+### Reasons for non-coverage
+
+```{r}
+tab <- data.frame(colSums(cmamDF[ , c("q1", "q2", "q3", "q4a", "q4b", "q4c", "q4d", "q4e", "q4f", "q4g", "q4h", "q4i", "q4j", "q4k", "q4l", "q4m", "q4n", "q4o", "q4p", "q4q", "q4r")], na.rm = TRUE))
+reasons <- letters[1:21]
+tab <- data.frame(reasons, tab)
+names(tab) <- c("reasons", "n")
+
+tab <- tab[tab$n != 0, ]
+
+ggplot(data = tab, aes(x = reorder(reasons, -n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "Reasons", y = "n") +
+  theme_bw()
+```
+
+Row
+--------------------------------------------------------------------------------
+
+### Cases in programme {.value-box}
+
+```{r}
+
+```
+
