@@ -578,9 +578,7 @@ covHex <- gmHexGrid
 covHex@data <- data.frame(covHex@data, anthroInt)
 
 pal <- colorNumeric(palette = rev(brewer.pal(n = 10, name = "RdYlGn")),
-                    domain = c(min(anthroInt$global.haz, 
-                                   anthroInt$moderate.haz, 
-                                   anthroInt$severe.haz),
+                    domain = c(0,
                                max(anthroInt$global.haz, 
                                    anthroInt$moderate.haz, 
                                    anthroInt$severe.haz)))
@@ -656,9 +654,7 @@ leaflet() %>%
 	) %>%
   addLegend(pal = pal, 
     opacity = 0.7,
-    values = c(min(anthroInt$global.haz, 
-                   anthroInt$moderate.haz, 
-                   anthroInt$severe.haz),
+    values = c(0,
                max(anthroInt$global.haz, 
                    anthroInt$moderate.haz, 
                    anthroInt$severe.haz)),
@@ -679,9 +675,7 @@ leaflet() %>%
 library(leaflet)
 
 pal <- colorNumeric(palette = rev(brewer.pal(n = 10, name = "RdYlGn")),
-                    domain = c(min(anthroInt$global.waz, 
-                                   anthroInt$moderate.waz, 
-                                   anthroInt$severe.waz),
+                    domain = c(0,
                                max(anthroInt$global.waz, 
                                    anthroInt$moderate.waz, 
                                    anthroInt$severe.waz)))
@@ -757,9 +751,7 @@ leaflet() %>%
 	) %>%
   addLegend(pal = pal, 
     opacity = 0.7,
-    values = c(min(anthroInt$global.waz, 
-                   anthroInt$moderate.waz, 
-                   anthroInt$severe.waz),
+    values = c(0,
                max(anthroInt$global.waz, 
                    anthroInt$moderate.waz, 
                    anthroInt$severe.waz)),
@@ -779,9 +771,7 @@ leaflet() %>%
 library(leaflet)
 
 pal <- colorNumeric(palette = rev(brewer.pal(n = 10, name = "RdYlGn")),
-                    domain = c(min(anthroInt$gam.whz, 
-                                   anthroInt$mam.whz, 
-                                   anthroInt$sam.whz),
+                    domain = c(0,
                                max(anthroInt$gam.whz, 
                                    anthroInt$mam.whz, 
                                    anthroInt$sam.whz)))
@@ -857,9 +847,7 @@ leaflet() %>%
 	) %>%
   addLegend(pal = pal, 
     opacity = 0.7,
-    values = c(min(anthroInt$gam.whz, 
-                  anthroInt$mam.whz, 
-                  anthroInt$sam.whz),
+    values = c(0,
                max(anthroInt$gam.whz, 
                    anthroInt$mam.whz,
                    anthroInt$sam.whz)),
@@ -880,9 +868,7 @@ leaflet() %>%
 library(leaflet)
 
 pal <- colorNumeric(palette = rev(brewer.pal(n = 10, name = "RdYlGn")),
-                    domain = c(min(anthroInt$gam.muac, 
-                                   anthroInt$mam.muc, 
-                                   anthroInt$sam.muac),
+                    domain = c(0,
                                max(anthroInt$gam.muac, 
                                    anthroInt$mam.muc, 
                                    anthroInt$sam.muac)))
@@ -958,9 +944,7 @@ leaflet() %>%
 	) %>%
   addLegend(pal = pal, 
     opacity = 0.7,
-    values = c(min(anthroInt$gam.muac, 
-                   anthroInt$mam.muc, 
-                   anthroInt$sam.muac),
+    values = c(0,
                max(anthroInt$gam.muac, 
                    anthroInt$mam.muc,
                    anthroInt$sam.muac)),
@@ -969,6 +953,54 @@ leaflet() %>%
 		layerId = "legend") %>%
   addLayersControl(
 		baseGroups = c("Global wasting by MUAC", "Moderate wasting by MUAC", "Severe wasting by MUAC"),
+		position = "topleft",
+		options = layersControlOptions(collapsed = FALSE, autoZIndex = TRUE)
+	)
+```
+
+### Oedema
+
+```{r oedemaGM}
+library(leaflet)
+
+pal <- colorNumeric(palette = rev(brewer.pal(n = 10, name = "RdYlGn")),
+                    domain = c(0, max(anthroInt$oedema)))
+
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gmLng1, lat1 = gmLat1,
+            lng2 = gmLng2, lat2 = gmLat2) %>%
+    addPolygons(
+	  data = covHex,
+	  fillColor = pal(covHex$oedema),
+	  weight = 1,
+	  opacity = 1,
+	  color = pal(covHex$oedema),
+	  dashArray = "",
+	  fillOpacity = 0.7,
+	  highlight = highlightOptions(
+		  weight = 3,
+		  color = "#666",
+		  dashArray = "",
+		  fillOpacity = 0.7,
+		  bringToFront = TRUE),
+	  label = paste(round(covHex$oedema * 100, digits = 1), "%", sep = ""),
+	  labelOptions = labelOptions(
+		  style = list("font-weight" = "normal", padding = "3px 8px"),
+		  textsize = "12px",
+		  direction = "auto"),
+	  group = "Oedema"
+	) %>%
+  addLegend(pal = pal, 
+    opacity = 0.7,
+    values = c(0, max(anthroInt$oedema)),
+		position = "bottomleft", 
+		labFormat = labelFormat(suffix = "%", transform = function(x) x * 100),
+		layerId = "legend") %>%
+  addLayersControl(
+		baseGroups = c("Oedema"),
 		position = "topleft",
 		options = layersControlOptions(collapsed = FALSE, autoZIndex = TRUE)
 	)
@@ -983,20 +1015,121 @@ Row {.tabset .tabset-fade}
  
 ### IFA
 
+```{r ifaGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
 ### IYCF
+
+```{r iycfGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
 
 ### MNP
 
+```{r mnpGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
 ### Vitamin A
+
+```{r vitGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
 
 ### Nutrition Screening
 
+```{r screenGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
 ### CMAM
+
+```{r cmamGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
 
 ### Stunting
 
+```{r stuntGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
 ### Underweight
+
+```{r underweightGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
 
 ### Wasting (WHZ)
 
+```{r whzGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
 ### Wasting (MUAC)
+
+```{r muacGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
+
+### Oedema
+
+```{r oedemaGB}
+leaflet() %>%
+  addTiles(urlTemplate = mapbox.street,
+    attribution = "Maps by <a href='http://www.mapbox.com/'>Mapbox</a>"
+  ) %>%
+  fitBounds(lng1 = gbLng1, lat1 = gbLat1,
+            lng2 = gbLng2, lat2 = gbLat2)
+```
